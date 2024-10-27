@@ -18,4 +18,30 @@ MMLU (which stands for Massive Multitask Language Understanding) is a benchmark 
 | 6   | 37.1% (micro), 39.0% (macro) | "Compartmentalized" shots in prompt                                                                       |
 | 7   | 42.9% (micro), 43.7% (macro) | "Compartmentalized" prompts coming from Meta-LLaMA evaluators, using do_sample=False, simple format parse |
 
+## Problems
+
+There was a performance drop due to problems in constraining the inference model's responses to the correct format. This is the final form of the prompting function that uses a dictionary scheme similar to how OpenAI API functions consume their parameters.
+
+```python
+for i in tqdm(range(len(data))):
+    total += 1
+    item = data.iloc[i]
+    final_prompts = item['input_final_prompts']
+    correct_answer = item['input_correct_responses'][0]
+    question = item['input_question']
+    choices = item['input_choice_list']
+    subject = item['subtask_name']
+
+    messages = [
+        {'role': 'system', 'content': final_prompts},
+    ]
+
+    outputs = pipe(messages, max_new_tokens=10, do_sample=False)
+    
+    output = outputs[0]['generated_text'][-1]['content'].strip()
+    llama_answer = ''
+    # ...
+```
+
+The recommendation is that instead of passing a `messages` dict, we can opt to pass in the raw message text directly to the inference model.
 
